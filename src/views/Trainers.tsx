@@ -40,6 +40,13 @@ const Trainers: FC = () => {
   // both of which now show their own spinner on their own button instead.
   const [busyAction, setBusyAction] = useState<"search" | "open" | "download" | null>(null);
   const busy = busyAction !== null;
+  // Which specific download is currently in flight, so only that row's
+  // button swaps to a spinner - busyAction alone can't tell the rows apart.
+  const [activeDownloadUrl, setActiveDownloadUrl] = useState<string | undefined>(undefined);
+  // Lets a stale openGame() response (the user pressed Back before it
+  // resolved) recognize itself and skip applying its result - see the
+  // "Third update" note below.
+  const openGameRequestRef = useRef<string | undefined>(undefined);
 
   // Each of the three panels below (search form / results list / downloads
   // list) used to be wrapped in its *own* <Focusable>, mounted/unmounted as
@@ -104,13 +111,34 @@ const Trainers: FC = () => {
   // results/downloads list below it - neither of which is a real
   // SteamUI-registered control, so there's nothing there for the nav tree to
   // lose.
-  const view = selection ? "selection" : results.length > 0 ? "results" : "form";
+  //
+  // Third update: `disabled` turned out to be its own version of the same
+  // bug. Clicking a result to open its downloads (or clicking a download to
+  // fetch it) set a shared `busy` flag that disabled every control in the
+  // top box (search/search-button/back) *and* every row in the list below,
+  // including the row the user had just pressed - i.e. the row that
+  // currently held focus. A disabled control can't hold focus, so SteamUI's
+  // nav tree loses its anchor exactly like the unmount case above, just
+  // triggered by a prop flip instead of a mount/unmount. Fix: nothing is
+  // ever disabled because of an in-flight fetch anymore. The Search button
+  // and TextField only disable for the input-validity case (empty query),
+  // the Back button only disables when there's genuinely nowhere to go back
+  // to, and list rows are never disabled - re-entrancy is prevented by the
+  // `if (busy) return` guard already at the top of each handler, not by the
+  // `disabled` prop. Busy state is now communicated purely by swapping
+  // content (a `SteamSpinner` in place of the results list while a game's
+  // downloads are loading - the "loading" view below - and a per-row
+  // spinner via `activeDownloadUrl` while that specific download runs),
+  // never by disabling something that might be focused.
+  const view = selection ? "selection" : busyAction === "open" ? "loading" : results.length > 0 ? "results" : "form";
   const formRef = useRef<HTMLDivElement>(null);
   const firstResultRef = useRef<HTMLDivElement>(null);
   const firstDownloadRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const container = { form: formRef, results: firstResultRef, selection: firstDownloadRef }[view].current;
+    const container = { form: formRef, results: firstResultRef, selection: firstDownloadRef, loading: loadingRef }[view]
+      .current;
     if (!container) return;
     const target = container.querySelector<HTMLElement>("[tabindex]") ?? container;
 
@@ -137,10 +165,14 @@ const Trainers: FC = () => {
   // downloads list to the results (if a game is selected), otherwise clears
   // the results back to the empty form.
   const goBack = () => {
+    // Invalidate any in-flight openGame() request so its response is
+    // ignored if it resolves after the user has already navigated away.
+    openGameRequestRef.current = undefined;
     if (selection) {
       setSelection(undefined);
     } else {
       reset();
+      if (busyAction === "open") setBusyAction(null);
     }
   };
 
@@ -165,18 +197,25 @@ const Trainers: FC = () => {
 
   const openGame = async (game: TrainerSearchResult) => {
     if (busy) return;
+    openGameRequestRef.current = game.url;
     setBusyAction("open");
     setStatusMessage(undefined);
     try {
       const downloads = await trainers.listDownloads(game.url);
+      // The user may have pressed Back while this was in flight - don't
+      // resurrect a selection (or an error/empty message) for a request
+      // they've already backed out of.
+      if (openGameRequestRef.current !== game.url) return;
       if (downloads.length === 0) {
         setStatusMessage(t("TRAINERS_NO_RESULTS"));
         return;
       }
       setSelection({ game, downloads });
     } catch {
-      setStatusMessage(t("TRAINERS_SEARCH_ERROR"));
+      if (openGameRequestRef.current === game.url) setStatusMessage(t("TRAINERS_SEARCH_ERROR"));
     } finally {
+      // Always clear busy, even for a stale request, so the UI never gets
+      // stuck "busy" after the user has already navigated away.
       setBusyAction(null);
     }
   };
@@ -212,7 +251,9 @@ const Trainers: FC = () => {
 
   const downloadAndAttach = async (download: TrainerDownloadOption) => {
     if (busy || !selection) return;
+    const game = selection.game;
     setBusyAction("download");
+    setActiveDownloadUrl(download.url);
     setStatusMessage(t("TRAINERS_DOWNLOADING"));
     try {
       const result = await trainers.download(download.url, appid, selection.game.title, download.label);
@@ -228,18 +269,32 @@ const Trainers: FC = () => {
 
       const stlSet = await trySetSteamTinkerLaunch(appid);
       sendNotice(stlSet ? t("TRAINERS_DOWNLOAD_SUCCESS_STL") : t("TRAINERS_DOWNLOAD_SUCCESS"));
-      setQuery("");
-      reset();
+      // Stay on this game's downloads screen instead of resetting back to
+      // the empty form - the user may want to grab a different version, or
+      // just wants confirmation this one attached. Mark this specific
+      // download as downloaded (the same flag `downloadLabel` already
+      // checks to show a checkmark) rather than re-fetching the list.
+      // Guarded by game URL in case the user opened a different game while
+      // this download was still running.
+      setSelection((current) =>
+        current && current.game.url === game.url
+          ? {
+              ...current,
+              downloads: current.downloads.map((item) =>
+                item.url === download.url ? { ...item, downloaded: true } : item,
+              ),
+            }
+          : current,
+      );
       // Told as a persistent panel message rather than only the toast above
       // (which disappears after ~2s) - the user may want to go install STL,
       // so this stays up until their next search.
-      if (!stlSet) {
-        setStatusMessage(t("TRAINERS_STL_NOT_FOUND"));
-      }
+      setStatusMessage(stlSet ? undefined : t("TRAINERS_STL_NOT_FOUND"));
     } catch {
       setStatusMessage(t("TRAINERS_DOWNLOAD_ERROR"));
     } finally {
       setBusyAction(null);
+      setActiveDownloadUrl(undefined);
     }
   };
 
@@ -256,42 +311,49 @@ const Trainers: FC = () => {
               label={t("TRAINERS_SEARCH_LABEL")}
               description={t("TRAINERS_SEARCH_PLACEHOLDER")}
               value={query}
-              disabled={busy}
+              disabled={busyAction === "search"}
               onChange={(event) => setQuery(event.target.value)}
             />
           </PanelSectionRow>
           <PanelSectionRow>
-            <ButtonItem layout="below" disabled={busy || query.trim().length === 0} onClick={() => void runSearch()}>
+            <ButtonItem layout="below" disabled={query.trim().length === 0} onClick={() => void runSearch()}>
               {busyAction === "search" ? <BusySpinner /> : t("TRAINERS_SEARCH_BUTTON")}
             </ButtonItem>
           </PanelSectionRow>
           <PanelSectionRow>
-            <ButtonItem layout="below" disabled={busy || (!selection && results.length === 0)} onClick={goBack}>
+            <ButtonItem layout="below" disabled={!selection && results.length === 0} onClick={goBack}>
               <FaArrowLeft /> {t("TRAINERS_BACK")}
             </ButtonItem>
           </PanelSectionRow>
         </div>
 
-        {(selection || results.length > 0) && (
+        {view !== "form" && (
           <PanelSectionRow>
             <Field padding="none" bottomSeparator="standard" />
           </PanelSectionRow>
         )}
 
-        {!selection &&
-          results.length > 0 &&
+        {view === "loading" && (
+          <PanelSectionRow>
+            <Focusable ref={loadingRef} style={{ display: "flex", justifyContent: "center", padding: "1.5em 0" }}>
+              <SteamSpinner style={{ width: "3em", height: "3em" }} />
+            </Focusable>
+          </PanelSectionRow>
+        )}
+
+        {view === "results" &&
           results.map((result, index) =>
             index === 0 ? (
               <PanelSectionRow key={result.url}>
                 <Focusable ref={firstResultRef}>
-                  <ButtonItem layout="below" disabled={busy} onClick={() => void openGame(result)}>
+                  <ButtonItem layout="below" onClick={() => void openGame(result)}>
                     {result.title}
                   </ButtonItem>
                 </Focusable>
               </PanelSectionRow>
             ) : (
               <PanelSectionRow key={result.url}>
-                <ButtonItem layout="below" disabled={busy} onClick={() => void openGame(result)}>
+                <ButtonItem layout="below" onClick={() => void openGame(result)}>
                   {result.title}
                 </ButtonItem>
               </PanelSectionRow>
@@ -307,15 +369,15 @@ const Trainers: FC = () => {
               index === 0 ? (
                 <PanelSectionRow key={download.url}>
                   <Focusable ref={firstDownloadRef}>
-                    <ButtonItem layout="below" disabled={busy} onClick={() => void downloadAndAttach(download)}>
-                      {busyAction === "download" ? <BusySpinner /> : downloadLabel(download)}
+                    <ButtonItem layout="below" onClick={() => void downloadAndAttach(download)}>
+                      {activeDownloadUrl === download.url ? <BusySpinner /> : downloadLabel(download)}
                     </ButtonItem>
                   </Focusable>
                 </PanelSectionRow>
               ) : (
                 <PanelSectionRow key={download.url}>
-                  <ButtonItem layout="below" disabled={busy} onClick={() => void downloadAndAttach(download)}>
-                    {busyAction === "download" ? <BusySpinner /> : downloadLabel(download)}
+                  <ButtonItem layout="below" onClick={() => void downloadAndAttach(download)}>
+                    {activeDownloadUrl === download.url ? <BusySpinner /> : downloadLabel(download)}
                   </ButtonItem>
                 </PanelSectionRow>
               ),
