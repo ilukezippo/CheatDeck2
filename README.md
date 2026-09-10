@@ -18,23 +18,23 @@ CheatDeck 2 is a [Decky Loader](https://github.com/SteamDeckHomebrew/decky-loade
 
 ## Normal Options
 
-The *Normal* tab provides the primary Sidecar Program and Language controls.
+The *Normal* tab provides the primary Trainer/Cheat exe and Language controls.
 
-### Sidecar Program
+### Trainer/Cheat exe
 
-1. Download a trusted Windows sidecar program, such as a trainer or utility, to your Steam Deck.
+1. Download a trusted Windows executable, such as a trainer or utility, to your Steam Deck.
 2. Access the game context menu to find the `CheatDeck 2` menu item.
    <details open> <summary>screenshot</summary> <img src="docs/menu.jpg" width="600"> </details>
-3. Enable **Sidecar Program** and select an `.exe` or `.bat` file. Changes are saved automatically.
+3. Enable **Trainer/Cheat exe** and select an `.exe` or `.bat` file. Changes are saved automatically.
    <details open> <summary>screenshot</summary> <img src="docs/settings.jpg" width="600"> </details>
-4. Launch the game. If the sidecar window does not appear in front, press the Steam button to switch between open windows.
+4. Launch the game. If the program's window does not appear in front, press the Steam button to switch between open windows.
    <details open> <summary>screenshot</summary> <img src="docs/trainer.jpg" width="600"> </details>
 
 The selected program starts alongside the primary program in the same Proton/Wine environment and stops when the primary program exits.
 
-#### Reliable Sidecar Launch
+#### Reliable Trainer/Cheat Launch
 
-Sidecar Program normally relies on Proton's own `PROTON_REMOTE_DEBUG_CMD` hook to start the sidecar. Some Proton/Wine builds have shipped with this hook silently broken (see [GloriousEggroll/proton-ge-custom#664](https://github.com/GloriousEggroll/proton-ge-custom/issues/664)) - the program stays configured in CheatDeck 2 but never actually launches. To work around this, enabling Sidecar Program also installs a small wrapper script (`sidecar-launch.sh`, written to the plugin's data directory) as an additional launch-option prefix command. The wrapper waits briefly for Proton's own hook, and if the sidecar still isn't running under Wine, launches it directly using the game's own Wine build before handing off to the game. Both mechanisms are attempted; whichever works, works. No action is needed - this applies automatically whenever Sidecar Program is enabled from a version of CheatDeck 2 that includes it.
+Trainer/Cheat exe normally relies on Proton's own `PROTON_REMOTE_DEBUG_CMD` hook to start the sidecar. Some Proton/Wine builds have shipped with this hook silently broken (see [GloriousEggroll/proton-ge-custom#664](https://github.com/GloriousEggroll/proton-ge-custom/issues/664)) - the program stays configured in CheatDeck 2 but never actually launches. To work around this, enabling Trainer/Cheat exe also installs a small wrapper script (`sidecar-launch.sh`, written to the plugin's data directory) as an additional launch-option prefix command. The wrapper waits briefly for Proton's own hook, and if the sidecar still isn't running under Wine, launches it directly using the game's own Wine build before handing off to the game. Both mechanisms are attempted; whichever works, works. No action is needed - this applies automatically whenever Trainer/Cheat exe is enabled from a version of CheatDeck 2 that includes it.
 
 ### Trainers
 
@@ -42,9 +42,9 @@ The *Trainers* tab searches [FLiNG Trainer](https://flingtrainer.com) by game na
 
 1. Open the *Trainers* tab and enter a game name.
 2. Pick a result, then pick a version from the download list.
-3. CheatDeck 2 downloads the archive, extracts it, and sets the trainer `.exe` as the Sidecar Program automatically.
+3. CheatDeck 2 downloads the archive, extracts it, and sets the trainer `.exe` as the Trainer/Cheat exe automatically.
 
-This talks directly to flingtrainer.com from the Deck; CheatDeck 2 doesn't control or vouch for the content of any specific trainer, in the same way it doesn't for a sidecar program you pick manually. If an archive is password-protected or the site's page layout has changed since this was written, download it manually instead and set it as the Sidecar Program on the *Normal* tab.
+This talks directly to flingtrainer.com from the Deck; CheatDeck 2 doesn't control or vouch for the content of any specific trainer, in the same way it doesn't for a sidecar program you pick manually. If an archive is password-protected or the site's page layout has changed since this was written, download it manually instead and set it as the Trainer/Cheat exe on the *Normal* tab.
 
 ### Language
 

@@ -1,3 +1,4 @@
+import ar from "../data/locales/ar.json";
 import de from "../data/locales/de.json";
 import en from "../data/locales/en.json";
 import fr from "../data/locales/fr.json";
@@ -12,6 +13,7 @@ type TranslationKey = keyof typeof en;
 type Language = Record<TranslationKey, string>;
 
 const languages = {
+  ar,
   de,
   en,
   fr,

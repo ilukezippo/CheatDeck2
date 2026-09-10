@@ -1,4 +1,4 @@
-import { ButtonItem, Field, Focusable, PanelSection, PanelSectionRow, Spinner, TextField } from "@decky/ui";
+import { ButtonItem, Field, Focusable, PanelSection, PanelSectionRow, SteamSpinner, TextField } from "@decky/ui";
 import { type FC, useEffect, useRef, useState } from "react";
 import { FaArrowLeft, FaCheck } from "react-icons/fa6";
 
@@ -21,6 +21,14 @@ import { t } from "../utils/translate";
 // another tab (Normal/Advanced/Custom) and remounts it fresh on return,
 // which would otherwise silently wipe any results the user had already
 // found.
+
+// SteamUI's own native loading animation (resolved out of its webpack
+// bundle, same pattern as Focusable - see @decky/ui/dist/components/
+// SteamSpinner.js's findModuleExport call) rather than @decky/ui's plain
+// `Spinner`, which is just a small static icon. Sized down to sit inline in
+// a button's text slot, the same spot the icon spinner occupied.
+const BusySpinner: FC = () => <SteamSpinner style={{ width: "1.5em", height: "1.5em" }} />;
+
 const Trainers: FC = () => {
   const { options, appid, applyEdit } = useOptions();
   const wrapperPath = useSidecarWrapperPath();
@@ -60,13 +68,26 @@ const Trainers: FC = () => {
   // SDH-CssLoader's ThemeBrowserPage.tsx, a shipped Decky plugin with the
   // same list-refresh timing problem).
   //
+  // Update, confirmed on real hardware: the fix above (one persistent outer
+  // Focusable, plain div/fragment content) wasn't the whole story. The
+  // search form's TextField and "Search" ButtonItem are themselves real
+  // SteamUI-registered controls (same as any other TextField/ButtonItem in
+  // this plugin), not cosmetic - so conditionally unmounting the whole form
+  // the moment results.length > 0 (the previous behavior) still tore down
+  // and recreated registered nav nodes on every search, same class of
+  // problem as the outer-Focusable churn, just one level in. The form
+  // (formRef's div, with the TextField + Search button) now stays mounted
+  // continuously across both the empty and results states - only `!selection`
+  // gates it, not `results.length === 0` - so a search only adds the results
+  // list below it instead of unmounting the form to show them. The deeper
+  // "selection" (per-game downloads) view still swaps out the form, since
+  // that's a distinct step the user takes deliberately, not part of the
+  // same search-and-see-a-list flow.
+  //
   // Caveat: gamepad focus/highlight behavior can only really be verified on
-  // real Deck hardware with a controller, which isn't available while
-  // writing this - this is a structural fix for a specific, plausible root
-  // cause (confirmed by comparing against the other tabs), not something
-  // confirmed working end-to-end. If it's still wrong, the next thing to
-  // check is whether PanelSection itself is quietly reintroducing a similar
-  // mount/unmount, since it also isn't a plain div.
+  // real Deck hardware with a controller. If it's still wrong, the next
+  // thing to check is whether PanelSection itself is quietly reintroducing a
+  // similar mount/unmount, since it also isn't a plain div.
   const view = selection ? "selection" : results.length > 0 ? "results" : "form";
   const formRef = useRef<HTMLDivElement>(null);
   const firstResultRef = useRef<HTMLDivElement>(null);
@@ -199,7 +220,7 @@ const Trainers: FC = () => {
           <Field description={t("TRAINERS_SOURCE_DESC")} padding="standard" bottomSeparator="none" />
         </PanelSectionRow>
 
-        {!selection && results.length === 0 && (
+        {!selection && (
           <div ref={formRef} style={{ display: "flex", flexDirection: "column" }}>
             <PanelSectionRow>
               <TextField
@@ -212,7 +233,7 @@ const Trainers: FC = () => {
             </PanelSectionRow>
             <PanelSectionRow>
               <ButtonItem layout="below" disabled={busy || query.trim().length === 0} onClick={() => void runSearch()}>
-                {busy ? <Spinner /> : t("TRAINERS_SEARCH_BUTTON")}
+                {busy ? <BusySpinner /> : t("TRAINERS_SEARCH_BUTTON")}
               </ButtonItem>
             </PanelSectionRow>
           </div>
@@ -260,14 +281,14 @@ const Trainers: FC = () => {
                 <PanelSectionRow key={download.url}>
                   <Focusable ref={firstDownloadRef}>
                     <ButtonItem layout="below" disabled={busy} onClick={() => void downloadAndAttach(download)}>
-                      {busy ? <Spinner /> : downloadLabel(download)}
+                      {busy ? <BusySpinner /> : downloadLabel(download)}
                     </ButtonItem>
                   </Focusable>
                 </PanelSectionRow>
               ) : (
                 <PanelSectionRow key={download.url}>
                   <ButtonItem layout="below" disabled={busy} onClick={() => void downloadAndAttach(download)}>
-                    {busy ? <Spinner /> : downloadLabel(download)}
+                    {busy ? <BusySpinner /> : downloadLabel(download)}
                   </ButtonItem>
                 </PanelSectionRow>
               ),
