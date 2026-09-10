@@ -1,0 +1,3 @@
+[submodule "plugins/CheatDeck2"]
+	path = plugins/CheatDeck2
+	url = https://github.com/ilukezippo/CheatDeck2.git
