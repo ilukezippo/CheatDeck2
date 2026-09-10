@@ -34,7 +34,12 @@ const Trainers: FC = () => {
   const wrapperPath = useSidecarWrapperPath();
   const { query, setQuery, results, setResults, selection, setSelection, statusMessage, setStatusMessage } =
     useTrainersState();
-  const [busy, setBusy] = useState(false);
+  // Tracks which action is in flight, not just whether one is, so the Search
+  // button's own spinner only appears while a search is actually running -
+  // not while a game's downloads are loading or a download is in progress,
+  // both of which now show their own spinner on their own button instead.
+  const [busyAction, setBusyAction] = useState<"search" | "open" | "download" | null>(null);
+  const busy = busyAction !== null;
 
   // Each of the three panels below (search form / results list / downloads
   // list) used to be wrapped in its *own* <Focusable>, mounted/unmounted as
@@ -79,15 +84,26 @@ const Trainers: FC = () => {
   // (formRef's div, with the TextField + Search button) now stays mounted
   // continuously across both the empty and results states - only `!selection`
   // gates it, not `results.length === 0` - so a search only adds the results
-  // list below it instead of unmounting the form to show them. The deeper
-  // "selection" (per-game downloads) view still swaps out the form, since
-  // that's a distinct step the user takes deliberately, not part of the
-  // same search-and-see-a-list flow.
+  // list below it instead of unmounting the form to show them. (Superseded
+  // by the "Second update" below, which drops the `!selection` gate too.)
   //
   // Caveat: gamepad focus/highlight behavior can only really be verified on
   // real Deck hardware with a controller. If it's still wrong, the next
   // thing to check is whether PanelSection itself is quietly reintroducing a
   // similar mount/unmount, since it also isn't a plain div.
+  //
+  // Second update: the same reasoning now applies to the "selection"
+  // (per-game downloads) view too - it used to swap the form out entirely,
+  // which meant leaving a search's results to look at a game's downloads
+  // (and coming back) tore down and rebuilt the TextField/Search button pair
+  // a second time. The form div is now unconditionally mounted (no `!selection`
+  // gate) for all three states, and a single persistent "Back" ButtonItem
+  // lives inside it too (replacing the two separate Back buttons that used
+  // to live inside the results/selection blocks), so the only thing that
+  // ever mounts/unmounts per view is the plain <Field> separator and the
+  // results/downloads list below it - neither of which is a real
+  // SteamUI-registered control, so there's nothing there for the nav tree to
+  // lose.
   const view = selection ? "selection" : results.length > 0 ? "results" : "form";
   const formRef = useRef<HTMLDivElement>(null);
   const firstResultRef = useRef<HTMLDivElement>(null);
@@ -117,25 +133,39 @@ const Trainers: FC = () => {
     setStatusMessage(undefined);
   };
 
+  // Single handler for the one persistent Back button: steps out of the
+  // downloads list to the results (if a game is selected), otherwise clears
+  // the results back to the empty form.
+  const goBack = () => {
+    if (selection) {
+      setSelection(undefined);
+    } else {
+      reset();
+    }
+  };
+
   const runSearch = async () => {
     const trimmed = query.trim();
     if (trimmed.length === 0 || busy) return;
-    setBusy(true);
+    setBusyAction("search");
     setStatusMessage(undefined);
     try {
       const found = await trainers.search(trimmed);
+      // A new search always replaces whatever was being browsed, even if the
+      // user ran it while looking at a specific game's downloads.
+      setSelection(undefined);
       setResults(found);
       if (found.length === 0) setStatusMessage(t("TRAINERS_NO_RESULTS"));
     } catch {
       setStatusMessage(t("TRAINERS_SEARCH_ERROR"));
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   };
 
   const openGame = async (game: TrainerSearchResult) => {
     if (busy) return;
-    setBusy(true);
+    setBusyAction("open");
     setStatusMessage(undefined);
     try {
       const downloads = await trainers.listDownloads(game.url);
@@ -147,7 +177,7 @@ const Trainers: FC = () => {
     } catch {
       setStatusMessage(t("TRAINERS_SEARCH_ERROR"));
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   };
 
@@ -182,7 +212,7 @@ const Trainers: FC = () => {
 
   const downloadAndAttach = async (download: TrainerDownloadOption) => {
     if (busy || !selection) return;
-    setBusy(true);
+    setBusyAction("download");
     setStatusMessage(t("TRAINERS_DOWNLOADING"));
     try {
       const result = await trainers.download(download.url, appid, selection.game.title, download.label);
@@ -209,7 +239,7 @@ const Trainers: FC = () => {
     } catch {
       setStatusMessage(t("TRAINERS_DOWNLOAD_ERROR"));
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   };
 
@@ -220,59 +250,56 @@ const Trainers: FC = () => {
           <Field description={t("TRAINERS_SOURCE_DESC")} padding="standard" bottomSeparator="none" />
         </PanelSectionRow>
 
-        {!selection && (
-          <div ref={formRef} style={{ display: "flex", flexDirection: "column" }}>
-            <PanelSectionRow>
-              <TextField
-                label={t("TRAINERS_SEARCH_LABEL")}
-                description={t("TRAINERS_SEARCH_PLACEHOLDER")}
-                value={query}
-                disabled={busy}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </PanelSectionRow>
-            <PanelSectionRow>
-              <ButtonItem layout="below" disabled={busy || query.trim().length === 0} onClick={() => void runSearch()}>
-                {busy ? <BusySpinner /> : t("TRAINERS_SEARCH_BUTTON")}
-              </ButtonItem>
-            </PanelSectionRow>
-          </div>
+        <div ref={formRef} style={{ display: "flex", flexDirection: "column" }}>
+          <PanelSectionRow>
+            <TextField
+              label={t("TRAINERS_SEARCH_LABEL")}
+              description={t("TRAINERS_SEARCH_PLACEHOLDER")}
+              value={query}
+              disabled={busy}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </PanelSectionRow>
+          <PanelSectionRow>
+            <ButtonItem layout="below" disabled={busy || query.trim().length === 0} onClick={() => void runSearch()}>
+              {busyAction === "search" ? <BusySpinner /> : t("TRAINERS_SEARCH_BUTTON")}
+            </ButtonItem>
+          </PanelSectionRow>
+          <PanelSectionRow>
+            <ButtonItem layout="below" disabled={busy || (!selection && results.length === 0)} onClick={goBack}>
+              <FaArrowLeft /> {t("TRAINERS_BACK")}
+            </ButtonItem>
+          </PanelSectionRow>
+        </div>
+
+        {(selection || results.length > 0) && (
+          <PanelSectionRow>
+            <Field padding="none" bottomSeparator="standard" />
+          </PanelSectionRow>
         )}
 
-        {!selection && results.length > 0 && (
-          <>
-            <PanelSectionRow>
-              <ButtonItem layout="below" disabled={busy} onClick={reset}>
-                <FaArrowLeft /> {t("TRAINERS_BACK")}
-              </ButtonItem>
-            </PanelSectionRow>
-            {results.map((result, index) =>
-              index === 0 ? (
-                <PanelSectionRow key={result.url}>
-                  <Focusable ref={firstResultRef}>
-                    <ButtonItem layout="below" disabled={busy} onClick={() => void openGame(result)}>
-                      {result.title}
-                    </ButtonItem>
-                  </Focusable>
-                </PanelSectionRow>
-              ) : (
-                <PanelSectionRow key={result.url}>
+        {!selection &&
+          results.length > 0 &&
+          results.map((result, index) =>
+            index === 0 ? (
+              <PanelSectionRow key={result.url}>
+                <Focusable ref={firstResultRef}>
                   <ButtonItem layout="below" disabled={busy} onClick={() => void openGame(result)}>
                     {result.title}
                   </ButtonItem>
-                </PanelSectionRow>
-              ),
-            )}
-          </>
-        )}
+                </Focusable>
+              </PanelSectionRow>
+            ) : (
+              <PanelSectionRow key={result.url}>
+                <ButtonItem layout="below" disabled={busy} onClick={() => void openGame(result)}>
+                  {result.title}
+                </ButtonItem>
+              </PanelSectionRow>
+            ),
+          )}
 
         {selection && (
           <>
-            <PanelSectionRow>
-              <ButtonItem layout="below" disabled={busy} onClick={() => setSelection(undefined)}>
-                <FaArrowLeft /> {t("TRAINERS_BACK")}
-              </ButtonItem>
-            </PanelSectionRow>
             <PanelSectionRow>
               <Field label={t("TRAINERS_SELECT_VERSION")} description={selection.game.title} padding="none" />
             </PanelSectionRow>
@@ -281,14 +308,14 @@ const Trainers: FC = () => {
                 <PanelSectionRow key={download.url}>
                   <Focusable ref={firstDownloadRef}>
                     <ButtonItem layout="below" disabled={busy} onClick={() => void downloadAndAttach(download)}>
-                      {busy ? <BusySpinner /> : downloadLabel(download)}
+                      {busyAction === "download" ? <BusySpinner /> : downloadLabel(download)}
                     </ButtonItem>
                   </Focusable>
                 </PanelSectionRow>
               ) : (
                 <PanelSectionRow key={download.url}>
                   <ButtonItem layout="below" disabled={busy} onClick={() => void downloadAndAttach(download)}>
-                    {busy ? <BusySpinner /> : downloadLabel(download)}
+                    {busyAction === "download" ? <BusySpinner /> : downloadLabel(download)}
                   </ButtonItem>
                 </PanelSectionRow>
               ),
