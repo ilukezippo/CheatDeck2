@@ -43,9 +43,13 @@ const Trainers: FC = () => {
   // Which specific download is currently in flight, so only that row's
   // button swaps to a spinner - busyAction alone can't tell the rows apart.
   const [activeDownloadUrl, setActiveDownloadUrl] = useState<string | undefined>(undefined);
+  // Same idea for the results list - which specific game's downloads are
+  // being fetched right now, so only *that* result's button shows a
+  // spinner. See the "Fifth update" note below for why this replaced the
+  // separate "loading" view.
+  const [openingUrl, setOpeningUrl] = useState<string | undefined>(undefined);
   // Lets a stale openGame() response (the user pressed Back before it
-  // resolved) recognize itself and skip applying its result - see the
-  // "Third update" note below.
+  // resolved) recognize itself and skip applying its result.
   const openGameRequestRef = useRef<string | undefined>(undefined);
 
   // Each of the three panels below (search form / results list / downloads
@@ -125,20 +129,44 @@ const Trainers: FC = () => {
   // the Back button only disables when there's genuinely nowhere to go back
   // to, and list rows are never disabled - re-entrancy is prevented by the
   // `if (busy) return` guard already at the top of each handler, not by the
-  // `disabled` prop. Busy state is now communicated purely by swapping
-  // content (a `SteamSpinner` in place of the results list while a game's
-  // downloads are loading - the "loading" view below - and a per-row
-  // spinner via `activeDownloadUrl` while that specific download runs),
-  // never by disabling something that might be focused.
-  const view = selection ? "selection" : busyAction === "open" ? "loading" : results.length > 0 ? "results" : "form";
+  // `disabled` prop. Busy state is communicated purely by swapping content
+  // within an already-mounted control (see the Fifth update below for how
+  // this ended up applying to the results list too), never by disabling
+  // something that might be focused.
+  //
+  // Fourth update (superseded, kept for the record): tried inserting a
+  // separate "loading" view - unmount the results list, show a spinner
+  // Focusable, mount the downloads list once ready - and proactively moving
+  // focus onto the persistent Back button right before that unmount, on the
+  // theory that a controlled hand-off would avoid the "nothing to land on"
+  // failure. Confirmed on hardware that this still lost focus. So an
+  // unmount of the focused row is unsafe here even when focus is
+  // deliberately relocated a moment beforehand - whatever SteamUI's restore
+  // pass is actually keyed on, a plain DOM .focus() call on an unrelated
+  // element isn't enough to satisfy it once the row is really gone.
+  //
+  // Fifth update: dropped the separate "loading" view entirely and copied
+  // the search button's actual mechanism instead of approximating it -
+  // search never had this problem because clicking "Search" never unmounts
+  // the search button; only its own children swap (title <-> spinner), the
+  // same node the whole time. `openGame` now does exactly that: the clicked
+  // result's button shows `BusySpinner` in place of its title (tracked by
+  // `openingUrl`, the same pattern already used for `activeDownloadUrl` on
+  // the downloads list), and the *entire* results list stays mounted,
+  // untouched, for the whole fetch - nothing unmounts, nothing needs a
+  // fallback focus target. Only once `setSelection(...)` actually fires does
+  // the results list get replaced by the downloads list, in the same single
+  // render as the new list appearing - structurally identical to the
+  // proven-working form-to-results swap after a search (the focused button
+  // is still the same node an instant before that swap, not a node that was
+  // torn down and left dangling first).
+  const view = selection ? "selection" : results.length > 0 ? "results" : "form";
   const formRef = useRef<HTMLDivElement>(null);
   const firstResultRef = useRef<HTMLDivElement>(null);
   const firstDownloadRef = useRef<HTMLDivElement>(null);
-  const loadingRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const container = { form: formRef, results: firstResultRef, selection: firstDownloadRef, loading: loadingRef }[view]
-      .current;
+    const container = { form: formRef, results: firstResultRef, selection: firstDownloadRef }[view].current;
     if (!container) return;
     const target = container.querySelector<HTMLElement>("[tabindex]") ?? container;
 
@@ -172,7 +200,10 @@ const Trainers: FC = () => {
       setSelection(undefined);
     } else {
       reset();
-      if (busyAction === "open") setBusyAction(null);
+      if (busyAction === "open") {
+        setBusyAction(null);
+        setOpeningUrl(undefined);
+      }
     }
   };
 
@@ -199,6 +230,7 @@ const Trainers: FC = () => {
     if (busy) return;
     openGameRequestRef.current = game.url;
     setBusyAction("open");
+    setOpeningUrl(game.url);
     setStatusMessage(undefined);
     try {
       const downloads = await trainers.listDownloads(game.url);
@@ -217,6 +249,7 @@ const Trainers: FC = () => {
       // Always clear busy, even for a stale request, so the UI never gets
       // stuck "busy" after the user has already navigated away.
       setBusyAction(null);
+      setOpeningUrl(undefined);
     }
   };
 
@@ -333,28 +366,20 @@ const Trainers: FC = () => {
           </PanelSectionRow>
         )}
 
-        {view === "loading" && (
-          <PanelSectionRow>
-            <Focusable ref={loadingRef} style={{ display: "flex", justifyContent: "center", padding: "1.5em 0" }}>
-              <SteamSpinner style={{ width: "3em", height: "3em" }} />
-            </Focusable>
-          </PanelSectionRow>
-        )}
-
         {view === "results" &&
           results.map((result, index) =>
             index === 0 ? (
               <PanelSectionRow key={result.url}>
                 <Focusable ref={firstResultRef}>
                   <ButtonItem layout="below" onClick={() => void openGame(result)}>
-                    {result.title}
+                    {openingUrl === result.url ? <BusySpinner /> : result.title}
                   </ButtonItem>
                 </Focusable>
               </PanelSectionRow>
             ) : (
               <PanelSectionRow key={result.url}>
                 <ButtonItem layout="below" onClick={() => void openGame(result)}>
-                  {result.title}
+                  {openingUrl === result.url ? <BusySpinner /> : result.title}
                 </ButtonItem>
               </PanelSectionRow>
             ),
