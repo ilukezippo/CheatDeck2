@@ -68,6 +68,13 @@ def _make_ssl_context() -> typing.Union[ssl.SSLContext, bool]:
         return True
 
 
+# Key under which a manifest of already-downloaded trainers is stored via
+# SettingsManager, so the Trainers tab can show a checkmark next to a
+# download option the user already has - keyed by the download's own URL
+# (unique per specific trainer version), not by game, since a user may have
+# downloaded one version of a game's trainer but not another.
+DOWNLOADED_TRAINERS_KEY = "DownloadedTrainersV1"
+
 SIDECAR_WRAPPER_FILENAME = "sidecar-launch.sh"
 
 # CheatDeck's "Sidecar Program" feature normally relies on Proton's own
@@ -297,6 +304,32 @@ def _find_trainer_executable(root: str) -> typing.Optional[str]:
     return pool[0]
 
 
+def _get_downloaded_trainers() -> typing.Dict[str, typing.Any]:
+    manifest = settings.getSetting(DOWNLOADED_TRAINERS_KEY, {})
+    if not isinstance(manifest, dict):
+        return {}
+    # A recorded download only counts if the file is still actually there -
+    # the user may have deleted it manually, or wiped the Downloads folder -
+    # so stale entries are dropped (and the pruned manifest re-saved) rather
+    # than showing a checkmark for a trainer that's no longer on disk.
+    pruned = {
+        url: entry
+        for url, entry in manifest.items()
+        if isinstance(entry, dict) and isinstance(entry.get("path"), str) and os.path.exists(entry["path"])
+    }
+    if len(pruned) != len(manifest):
+        settings.setSetting(DOWNLOADED_TRAINERS_KEY, pruned)
+    return pruned
+
+
+def _record_downloaded_trainer(url: str, path: str, appid: int, game_name: str, label: str) -> None:
+    manifest = settings.getSetting(DOWNLOADED_TRAINERS_KEY, {})
+    if not isinstance(manifest, dict):
+        manifest = {}
+    manifest[url] = {"path": path, "appid": appid, "game_name": game_name, "label": label}
+    settings.setSetting(DOWNLOADED_TRAINERS_KEY, manifest)
+
+
 def _write_sidecar_wrapper() -> None:
     try:
         os.makedirs(decky.DECKY_PLUGIN_RUNTIME_DIR, exist_ok=True)
@@ -446,6 +479,8 @@ class Plugin:
             logger.error("[backend] Fetching trainer page failed: {}".format(error))
             return []
 
+        downloaded_urls = set(_get_downloaded_trainers().keys())
+
         seen: typing.Set[str] = set()
         downloads = []
         for link in _extract_links(html_text):
@@ -455,7 +490,11 @@ class Plugin:
             if absolute in seen or not _is_allowed_url(absolute):
                 continue
             seen.add(absolute)
-            downloads.append({"label": link["text"] or absolute, "url": absolute})
+            downloads.append({
+                "label": link["text"] or absolute,
+                "url": absolute,
+                "downloaded": absolute in downloaded_urls,
+            })
         return downloads
 
     @classmethod
@@ -505,6 +544,7 @@ class Plugin:
                 logger.error("[backend] Could not save trainer executable: {}".format(error))
                 return {"ok": False, "error": "Could not save the downloaded trainer."}
             logger.info("[backend] Trainer ready for appid {}: {}".format(appid, exe_path))
+            _record_downloaded_trainer(url, exe_path, appid, data.get("game_name") or "", data.get("label") or "")
             return {"ok": True, "path": exe_path}
 
         archive_bytes = payload
@@ -557,4 +597,5 @@ class Plugin:
             return {"ok": False, "error": "Could not find a trainer executable in the downloaded archive."}
 
         logger.info("[backend] Trainer ready for appid {}: {}".format(appid, exe_path))
+        _record_downloaded_trainer(url, exe_path, appid, data.get("game_name") or "", data.get("label") or "")
         return {"ok": True, "path": exe_path}

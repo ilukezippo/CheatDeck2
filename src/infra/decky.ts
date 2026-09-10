@@ -41,6 +41,11 @@ export interface TrainerSearchResult {
 export interface TrainerDownloadOption {
   label: string;
   url: string;
+  // True when this exact version's URL was already downloaded before, per
+  // main.py's DownloadedTrainersV1 manifest (pruned server-side against
+  // what's still actually on disk) - lets the Trainers tab show a checkmark
+  // instead of the user re-downloading a version they already have.
+  downloaded: boolean;
 }
 
 export interface TrainerDownloadResult {

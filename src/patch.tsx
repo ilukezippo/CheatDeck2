@@ -26,9 +26,9 @@ const spliceArtworkItem = (children: any[], appid: number) => {
     propertiesMenuItemIdx,
     0,
     <MenuItem
-      key="cheat-deck"
+      key="cheat-deck-2"
       onSelected={() => {
-        Navigation.Navigate(`/cheatdeck/${appid}`);
+        Navigation.Navigate(`/cheatdeck2/${appid}`);
       }}
     >
       CheatDeck 2
@@ -46,8 +46,8 @@ const isOpeningAppContextMenu = (items: any[]) => {
 };
 
 const handleItemDupes = (items: any[]) => {
-  const sgdbIdx = items.findIndex((x: any) => x?.key === "cheat-deck");
-  if (sgdbIdx !== -1) items.splice(sgdbIdx, 1);
+  const cheatDeckIdx = items.findIndex((x: any) => x?.key === "cheat-deck-2");
+  if (cheatDeckIdx !== -1) items.splice(cheatDeckIdx, 1);
 };
 
 const patchMenuItems = (menuItems: any[], appid: number) => {

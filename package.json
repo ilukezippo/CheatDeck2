@@ -1,7 +1,7 @@
 {
   "name": "cheatdeck-2",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A launch options manager allows you to run games with cheats and trainers.",
   "scripts": {
     "build": "rollup -c",
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SheffeyG/CheatDeck.git"
+    "url": "git+https://github.com/ilukezippo/CheatDeck2.git"
   },
   "keywords": [
     "decky",
@@ -24,12 +24,12 @@
     "steam-deck",
     "deck"
   ],
-  "author": "SheffeyG",
+  "author": "ilukezippo",
   "license": "GPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/SheffeyG/CheatDeck/issues"
+    "url": "https://github.com/ilukezippo/CheatDeck2/issues"
   },
-  "homepage": "https://github.com/SheffeyG/CheatDeck#readme",
+  "homepage": "https://github.com/ilukezippo/CheatDeck2#readme",
   "devDependencies": {
     "@biomejs/biome": "^2.5.3",
     "@decky/rollup": "^1.0.2",

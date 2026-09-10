@@ -59,5 +59,8 @@
     "TRAINERS_SELECT_VERSION": "Choisir une version",
     "TRAINERS_DOWNLOADING": "Téléchargement du trainer...",
     "TRAINERS_DOWNLOAD_ERROR": "Échec du téléchargement. L'archive est peut-être protégée par mot de passe ou la page du site a changé ; vous pouvez toujours la télécharger manuellement et la définir comme programme secondaire.",
-    "TRAINERS_DOWNLOAD_SUCCESS": "Trainer téléchargé et défini comme programme secondaire."
+    "TRAINERS_DOWNLOAD_SUCCESS": "Trainer téléchargé et défini comme programme secondaire.",
+    "TRAINERS_ALREADY_DOWNLOADED": "Déjà téléchargé",
+    "TRAINERS_DOWNLOAD_SUCCESS_STL": "Trainer attaché ; Steam Tinker Launch défini comme outil de compatibilité.",
+    "TRAINERS_STL_NOT_FOUND": "Trainer attaché, mais Steam Tinker Launch n'est pas installé comme outil de compatibilité - installez-le pour que ce réglage se fasse automatiquement."
 }

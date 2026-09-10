@@ -59,5 +59,8 @@
     "TRAINERS_SELECT_VERSION": "Select a Version",
     "TRAINERS_DOWNLOADING": "Downloading trainer...",
     "TRAINERS_DOWNLOAD_ERROR": "Download failed. The archive may be password-protected or the site's page changed; you can still download it manually and set it as the Sidecar Program.",
-    "TRAINERS_DOWNLOAD_SUCCESS": "Trainer downloaded and attached as the Sidecar Program."
+    "TRAINERS_DOWNLOAD_SUCCESS": "Trainer downloaded and attached as the Sidecar Program.",
+    "TRAINERS_ALREADY_DOWNLOADED": "Already downloaded",
+    "TRAINERS_DOWNLOAD_SUCCESS_STL": "Trainer attached, and Steam Tinker Launch set as the compatibility tool.",
+    "TRAINERS_STL_NOT_FOUND": "Trainer attached, but Steam Tinker Launch isn't installed as a compatibility tool - install it if you want this set automatically."
 }

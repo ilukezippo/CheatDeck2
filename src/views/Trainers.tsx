@@ -1,10 +1,12 @@
 import { ButtonItem, Field, Focusable, PanelSection, PanelSectionRow, Spinner, TextField } from "@decky/ui";
 import { type FC, useEffect, useRef, useState } from "react";
-import { FaArrowLeft } from "react-icons/fa6";
+import { FaArrowLeft, FaCheck } from "react-icons/fa6";
 
 import { sidecarProgram } from "../domain/features";
+import { findSteamTinkerLaunch } from "../domain/steamTinkerLaunch";
 import { useOptions, useSidecarWrapperPath, useTrainersState } from "../hooks";
 import { sendNotice, type TrainerDownloadOption, type TrainerSearchResult, trainers } from "../infra/decky";
+import { getAvailableCompatTools, specifyCompatTool } from "../infra/steam";
 import { t } from "../utils/translate";
 
 // FLiNG Trainer (https://flingtrainer.com) search + download, run entirely
@@ -27,27 +29,44 @@ const Trainers: FC = () => {
   const [busy, setBusy] = useState(false);
 
   // Each of the three panels below (search form / results list / downloads
-  // list) replaces the previous one in the DOM rather than just updating it,
-  // so the item that had gamepad focus (e.g. the "Search" button) is
-  // unmounted out from under the focus system. SteamUI then has nothing to
-  // fall back to and kicks the highlight all the way out to the Quick Access
-  // Menu's own side navigation, forcing the user to press right just to get
-  // back into the panel. Wrapping the first real entry of each new panel
-  // (not the "Back" button above it) in its own Focusable, and focusing that
-  // once it mounts, keeps the highlight where the user's attention already
-  // is - `Focusable` is @decky/ui's actual typed, ref-forwarding container
-  // (unlike ButtonItem, which doesn't forward refs), so it's the one thing
-  // here that's safe to attach a ref to and call .focus() on directly.
+  // list) used to be wrapped in its *own* <Focusable>, mounted/unmounted as
+  // `view` changed. That's different from every other tab in this plugin
+  // (Normal/Advanced/Custom - see their return statements), which each wrap
+  // their whole tab in exactly one <Focusable> that's never conditionally
+  // unmounted, and none of them have this bug. The reason that difference
+  // matters: `Focusable` isn't a plain styling wrapper - it's resolved at
+  // runtime straight out of SteamUI's own webpack bundle (see
+  // @decky/ui/dist/components/Focusable.js's findModuleExport call), so it
+  // *is* SteamUI's real gamepad-navigation-tree node, not a cosmetic div.
+  // Destroying and recreating that registered node on every view change (as
+  // the old per-view wrapper did) leaves a real gap in SteamUI's nav tree
+  // for a moment - its own "restore focus" pass runs somewhere in that gap
+  // and, finding nothing to land on, commits the highlight to the Quick
+  // Access Menu's sidebar. A brand new Focusable mounting moments later
+  // doesn't reclaim it, no matter how long a manual .focus() call waits
+  // (three earlier attempts here all only ever tuned that wait). So this
+  // version keeps exactly the one persistent, never-unmounted <Focusable>
+  // for the whole tab (below, same as every working tab) and swaps the
+  // per-view *content* as plain <div>/fragment children instead of separate
+  // Focusables - a plain <div> doesn't register with SteamUI at all, so
+  // there's nothing for it to lose when the results/selection list swaps.
   //
-  // The hard part is timing: SteamUI runs its own "restore focus" pass after
-  // a DOM change, asynchronously, so a call made in the same tick (or even
-  // the next animation frame) loses the race and gets silently overwritten -
-  // confirmed by SDH-CssLoader (a widely-used, shipped Decky plugin with
-  // this exact list-refresh problem: see ThemeBrowserPage.tsx), whose fix is
-  // a real setTimeout of ~100ms so it runs *after* SteamUI's own pass rather
-  // than racing it. The retry loop below is a safety net in case that pass
-  // is slower still, and stops as soon as focus actually lands (or after a
-  // few tries).
+  // A per-item Focusable around each panel's first real row (not the "Back"
+  // button above it) is still used, same pattern every other tab already
+  // relies on for a single item - and SteamUI still doesn't always move its
+  // own highlight onto a freshly mounted child on its own, so the retry loop
+  // below nudges a manual .focus() onto it, timed to run after SteamUI's own
+  // async restore pass rather than racing it (the ~100ms figure matches
+  // SDH-CssLoader's ThemeBrowserPage.tsx, a shipped Decky plugin with the
+  // same list-refresh timing problem).
+  //
+  // Caveat: gamepad focus/highlight behavior can only really be verified on
+  // real Deck hardware with a controller, which isn't available while
+  // writing this - this is a structural fix for a specific, plausible root
+  // cause (confirmed by comparing against the other tabs), not something
+  // confirmed working end-to-end. If it's still wrong, the next thing to
+  // check is whether PanelSection itself is quietly reintroducing a similar
+  // mount/unmount, since it also isn't a plain div.
   const view = selection ? "selection" : results.length > 0 ? "results" : "form";
   const formRef = useRef<HTMLDivElement>(null);
   const firstResultRef = useRef<HTMLDivElement>(null);
@@ -111,6 +130,35 @@ const Trainers: FC = () => {
     }
   };
 
+  const downloadLabel = (download: TrainerDownloadOption) => (
+    <>
+      {download.label}
+      {download.downloaded && (
+        <FaCheck title={t("TRAINERS_ALREADY_DOWNLOADED")} color="#2ecc71" style={{ marginLeft: "0.5em" }} />
+      )}
+    </>
+  );
+
+  // Mirrors what Properties > Compatibility > "Force the use of a specific
+  // Steam Play compatibility tool" > Steam Tinker Launch does manually -
+  // GetAvailableCompatTools/SpecifyCompatTool are the actual SteamClient
+  // methods behind that checkbox (see infra/steam.ts). Best-effort: a
+  // missing/renamed tool, or the call itself failing, just means the
+  // trainer stays attached without STL forced on it rather than failing the
+  // whole download - the caller decides what to tell the user based on the
+  // boolean result instead of this throwing.
+  const trySetSteamTinkerLaunch = async (targetAppid: number): Promise<boolean> => {
+    try {
+      const tools = await getAvailableCompatTools(targetAppid);
+      const tool = findSteamTinkerLaunch(tools);
+      if (!tool) return false;
+      specifyCompatTool(targetAppid, tool.strToolName);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const downloadAndAttach = async (download: TrainerDownloadOption) => {
     if (busy || !selection) return;
     setBusy(true);
@@ -126,9 +174,17 @@ const Trainers: FC = () => {
         setStatusMessage(t("TRAINERS_DOWNLOAD_ERROR"));
         return;
       }
-      sendNotice(t("TRAINERS_DOWNLOAD_SUCCESS"));
+
+      const stlSet = await trySetSteamTinkerLaunch(appid);
+      sendNotice(stlSet ? t("TRAINERS_DOWNLOAD_SUCCESS_STL") : t("TRAINERS_DOWNLOAD_SUCCESS"));
       setQuery("");
       reset();
+      // Told as a persistent panel message rather than only the toast above
+      // (which disappears after ~2s) - the user may want to go install STL,
+      // so this stays up until their next search.
+      if (!stlSet) {
+        setStatusMessage(t("TRAINERS_STL_NOT_FOUND"));
+      }
     } catch {
       setStatusMessage(t("TRAINERS_DOWNLOAD_ERROR"));
     } finally {
@@ -144,7 +200,7 @@ const Trainers: FC = () => {
         </PanelSectionRow>
 
         {!selection && results.length === 0 && (
-          <Focusable ref={formRef} style={{ display: "flex", flexDirection: "column" }}>
+          <div ref={formRef} style={{ display: "flex", flexDirection: "column" }}>
             <PanelSectionRow>
               <TextField
                 label={t("TRAINERS_SEARCH_LABEL")}
@@ -159,11 +215,11 @@ const Trainers: FC = () => {
                 {busy ? <Spinner /> : t("TRAINERS_SEARCH_BUTTON")}
               </ButtonItem>
             </PanelSectionRow>
-          </Focusable>
+          </div>
         )}
 
         {!selection && results.length > 0 && (
-          <Focusable style={{ display: "flex", flexDirection: "column" }}>
+          <>
             <PanelSectionRow>
               <ButtonItem layout="below" disabled={busy} onClick={reset}>
                 <FaArrowLeft /> {t("TRAINERS_BACK")}
@@ -186,11 +242,11 @@ const Trainers: FC = () => {
                 </PanelSectionRow>
               ),
             )}
-          </Focusable>
+          </>
         )}
 
         {selection && (
-          <Focusable style={{ display: "flex", flexDirection: "column" }}>
+          <>
             <PanelSectionRow>
               <ButtonItem layout="below" disabled={busy} onClick={() => setSelection(undefined)}>
                 <FaArrowLeft /> {t("TRAINERS_BACK")}
@@ -204,19 +260,19 @@ const Trainers: FC = () => {
                 <PanelSectionRow key={download.url}>
                   <Focusable ref={firstDownloadRef}>
                     <ButtonItem layout="below" disabled={busy} onClick={() => void downloadAndAttach(download)}>
-                      {busy ? <Spinner /> : download.label}
+                      {busy ? <Spinner /> : downloadLabel(download)}
                     </ButtonItem>
                   </Focusable>
                 </PanelSectionRow>
               ) : (
                 <PanelSectionRow key={download.url}>
                   <ButtonItem layout="below" disabled={busy} onClick={() => void downloadAndAttach(download)}>
-                    {busy ? <Spinner /> : download.label}
+                    {busy ? <Spinner /> : downloadLabel(download)}
                   </ButtonItem>
                 </PanelSectionRow>
               ),
             )}
-          </Focusable>
+          </>
         )}
 
         {statusMessage && (

@@ -59,5 +59,8 @@
     "TRAINERS_SELECT_VERSION": "Выберите версию",
     "TRAINERS_DOWNLOADING": "Загрузка трейнера...",
     "TRAINERS_DOWNLOAD_ERROR": "Не удалось загрузить. Архив может быть защищён паролем, либо страница сайта изменилась; вы можете скачать его вручную и указать как дополнительную программу (Sidecar).",
-    "TRAINERS_DOWNLOAD_SUCCESS": "Трейнер загружен и назначен дополнительной программой (Sidecar)."
+    "TRAINERS_DOWNLOAD_SUCCESS": "Трейнер загружен и назначен дополнительной программой (Sidecar).",
+    "TRAINERS_ALREADY_DOWNLOADED": "Уже загружено",
+    "TRAINERS_DOWNLOAD_SUCCESS_STL": "Трейнер назначен; Steam Tinker Launch установлен в качестве инструмента совместимости.",
+    "TRAINERS_STL_NOT_FOUND": "Трейнер назначен, но Steam Tinker Launch не установлен как инструмент совместимости - установите его, чтобы это происходило автоматически."
 }

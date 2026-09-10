@@ -59,5 +59,8 @@
     "TRAINERS_SELECT_VERSION": "選擇版本",
     "TRAINERS_DOWNLOADING": "正在下載修改器...",
     "TRAINERS_DOWNLOAD_ERROR": "下載失敗。壓縮檔可能受密碼保護，或該網站頁面已變更；你仍可手動下載並設為附加程式。",
-    "TRAINERS_DOWNLOAD_SUCCESS": "修改器已下載並設為附加程式。"
+    "TRAINERS_DOWNLOAD_SUCCESS": "修改器已下載並設為附加程式。",
+    "TRAINERS_ALREADY_DOWNLOADED": "已下載",
+    "TRAINERS_DOWNLOAD_SUCCESS_STL": "附加程式已設定；已將 Steam Tinker Launch 設為相容工具。",
+    "TRAINERS_STL_NOT_FOUND": "附加程式已設定，但尚未安裝 Steam Tinker Launch 作為相容工具——安裝後可自動設定。"
 }

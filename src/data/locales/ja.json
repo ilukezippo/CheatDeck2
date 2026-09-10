@@ -59,5 +59,8 @@
     "TRAINERS_SELECT_VERSION": "バージョンを選択",
     "TRAINERS_DOWNLOADING": "トレーナーをダウンロード中...",
     "TRAINERS_DOWNLOAD_ERROR": "ダウンロードに失敗しました。アーカイブがパスワードで保護されているか、サイトのページが変更された可能性があります。手動でダウンロードしてサイドカー・プログラムとして設定することもできます。",
-    "TRAINERS_DOWNLOAD_SUCCESS": "トレーナーをダウンロードし、サイドカー・プログラムとして設定しました。"
+    "TRAINERS_DOWNLOAD_SUCCESS": "トレーナーをダウンロードし、サイドカー・プログラムとして設定しました。",
+    "TRAINERS_ALREADY_DOWNLOADED": "ダウンロード済み",
+    "TRAINERS_DOWNLOAD_SUCCESS_STL": "トレーナーを設定し、Steam Tinker Launchを互換ツールとして設定しました。",
+    "TRAINERS_STL_NOT_FOUND": "トレーナーは設定されましたが、Steam Tinker Launchが互換ツールとしてインストールされていません。自動設定するにはインストールしてください。"
 }

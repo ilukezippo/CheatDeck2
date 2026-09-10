@@ -59,5 +59,8 @@
     "TRAINERS_SELECT_VERSION": "Version auswählen",
     "TRAINERS_DOWNLOADING": "Trainer wird heruntergeladen...",
     "TRAINERS_DOWNLOAD_ERROR": "Download fehlgeschlagen. Das Archiv ist möglicherweise passwortgeschützt oder die Seite hat sich geändert; du kannst es weiterhin manuell herunterladen und als Sidecar-Programm festlegen.",
-    "TRAINERS_DOWNLOAD_SUCCESS": "Trainer heruntergeladen und als Sidecar-Programm festgelegt."
+    "TRAINERS_DOWNLOAD_SUCCESS": "Trainer heruntergeladen und als Sidecar-Programm festgelegt.",
+    "TRAINERS_ALREADY_DOWNLOADED": "Bereits heruntergeladen",
+    "TRAINERS_DOWNLOAD_SUCCESS_STL": "Trainer angehängt; Steam Tinker Launch wurde als Kompatibilitätstool festgelegt.",
+    "TRAINERS_STL_NOT_FOUND": "Trainer angehängt, aber Steam Tinker Launch ist nicht als Kompatibilitätstool installiert - installiere es, damit dies automatisch festgelegt wird."
 }
