@@ -47,5 +47,17 @@
     "CUSTOM_DELETE_TITLE": "カスタムオプションを削除しますか？",
     "CUSTOM_DELETE_DESC": "この操作は元に戻せません。",
     "CUSTOM_ADD_LABEL": "新しいオプションを追加",
-    "CUSTOM_ADD_DESC": "カスタム起動オプションを追加"
+    "CUSTOM_ADD_DESC": "カスタム起動オプションを追加",
+    "TRAINERS_TITLE": "トレーナー",
+    "TRAINERS_SOURCE_DESC": "FLiNG Trainer (flingtrainer.com) を検索し、ゲームモードを離れずにトレーナーを適用します。",
+    "TRAINERS_SEARCH_LABEL": "ゲーム名",
+    "TRAINERS_SEARCH_PLACEHOLDER": "例: Hogwarts Legacy",
+    "TRAINERS_SEARCH_BUTTON": "検索",
+    "TRAINERS_BACK": "戻る",
+    "TRAINERS_NO_RESULTS": "結果が見つかりませんでした。",
+    "TRAINERS_SEARCH_ERROR": "FLiNG Trainer に接続できませんでした。Wi-Fi接続を確認して再試行してください。",
+    "TRAINERS_SELECT_VERSION": "バージョンを選択",
+    "TRAINERS_DOWNLOADING": "トレーナーをダウンロード中...",
+    "TRAINERS_DOWNLOAD_ERROR": "ダウンロードに失敗しました。アーカイブがパスワードで保護されているか、サイトのページが変更された可能性があります。手動でダウンロードしてサイドカー・プログラムとして設定することもできます。",
+    "TRAINERS_DOWNLOAD_SUCCESS": "トレーナーをダウンロードし、サイドカー・プログラムとして設定しました。"
 }

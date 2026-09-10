@@ -1,7 +1,7 @@
 {
-  "name": "cheatdeck",
+  "name": "cheatdeck-2",
   "type": "module",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "A launch options manager allows you to run games with cheats and trainers.",
   "scripts": {
     "build": "rollup -c",

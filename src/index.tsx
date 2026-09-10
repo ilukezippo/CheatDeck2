@@ -13,7 +13,7 @@ export default definePlugin(() => {
   routerHook.addRoute("/cheatdeck/:appid", PageRouter, { exact: true });
 
   return {
-    title: <div className={staticClasses.Title}>CheatDeck</div>,
+    title: <div className={staticClasses.Title}>CheatDeck 2</div>,
     content: (
       <SettingsProvider>
         <Content />

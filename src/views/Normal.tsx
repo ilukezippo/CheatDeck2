@@ -5,7 +5,7 @@ import { FaGlobe, FaWindowRestore } from "react-icons/fa";
 import { type DropdownPreset, LaunchOptionsPreview, ToggleDropdown, ToggleFilePicker } from "../components";
 import { LangCodes } from "../data/languageCodes.json";
 import { language, sidecarProgram } from "../domain/features";
-import { useOptions } from "../hooks";
+import { useOptions, useSidecarWrapperPath } from "../hooks";
 import { browseFiles, getHomePath } from "../infra/decky";
 import { t } from "../utils/translate";
 
@@ -13,11 +13,15 @@ const Normal: FC = () => {
   const { options, editable, applyEdit } = useOptions();
   const [showSidecar, setShowSidecar] = useState(sidecarProgram.isEnabled(options));
   const [showLang, setShowLang] = useState(language.isEnabled(options));
+  // Path to the Wine-fallback wrapper script (see domain/features.ts). When
+  // unavailable, sidecarProgram.set/disable fall back to their previous,
+  // Proton-hook-only behavior automatically.
+  const wrapperPath = useSidecarWrapperPath();
 
   const handleSidecarBrowse = async () => {
     const defaultPath = sidecarProgram.directory(options) ?? (await getHomePath());
     const filePickerRes = await browseFiles(defaultPath, true, ["exe", "bat"]);
-    const result = sidecarProgram.set(options, filePickerRes.path);
+    const result = sidecarProgram.set(options, filePickerRes.path, wrapperPath);
     if (!result.ok || !applyEdit(result)) setShowSidecar(false);
   };
 
@@ -36,7 +40,7 @@ const Normal: FC = () => {
             setShowSidecar(true);
             return;
           }
-          const result = sidecarProgram.disable(options);
+          const result = sidecarProgram.disable(options, wrapperPath);
           if (result.ok && applyEdit(result)) setShowSidecar(false);
         }}
         value={sidecarProgram.path(options)}

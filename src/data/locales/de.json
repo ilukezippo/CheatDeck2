@@ -47,5 +47,17 @@
     "CUSTOM_DELETE_TITLE": "Benutzerdefinierte Option löschen?",
     "CUSTOM_DELETE_DESC": "Diese Aktion kann nicht rückgängig gemacht werden.",
     "CUSTOM_ADD_LABEL": "Neue Option hinzufügen",
-    "CUSTOM_ADD_DESC": "Eine benutzerdefinierte Startoption hinzufügen"
+    "CUSTOM_ADD_DESC": "Eine benutzerdefinierte Startoption hinzufügen",
+    "TRAINERS_TITLE": "Trainer",
+    "TRAINERS_SOURCE_DESC": "Durchsuche FLiNG Trainer (flingtrainer.com) und hänge einen Trainer an, ohne den Gaming-Modus zu verlassen.",
+    "TRAINERS_SEARCH_LABEL": "Spielname",
+    "TRAINERS_SEARCH_PLACEHOLDER": "z. B. Hogwarts Legacy",
+    "TRAINERS_SEARCH_BUTTON": "Suchen",
+    "TRAINERS_BACK": "Zurück",
+    "TRAINERS_NO_RESULTS": "Keine Ergebnisse gefunden.",
+    "TRAINERS_SEARCH_ERROR": "FLiNG Trainer konnte nicht erreicht werden. Prüfe deine WLAN-Verbindung und versuche es erneut.",
+    "TRAINERS_SELECT_VERSION": "Version auswählen",
+    "TRAINERS_DOWNLOADING": "Trainer wird heruntergeladen...",
+    "TRAINERS_DOWNLOAD_ERROR": "Download fehlgeschlagen. Das Archiv ist möglicherweise passwortgeschützt oder die Seite hat sich geändert; du kannst es weiterhin manuell herunterladen und als Sidecar-Programm festlegen.",
+    "TRAINERS_DOWNLOAD_SUCCESS": "Trainer heruntergeladen und als Sidecar-Programm festgelegt."
 }

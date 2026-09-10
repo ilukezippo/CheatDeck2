@@ -47,5 +47,17 @@
     "CUSTOM_DELETE_TITLE": "删除自定义启动项？",
     "CUSTOM_DELETE_DESC": "此操作无法撤销。",
     "CUSTOM_ADD_LABEL": "添加新选项",
-    "CUSTOM_ADD_DESC": "添加自定义启动项"
+    "CUSTOM_ADD_DESC": "添加自定义启动项",
+    "TRAINERS_TITLE": "修改器",
+    "TRAINERS_SOURCE_DESC": "搜索 FLiNG Trainer (flingtrainer.com) 并附加修改器，无需离开游戏模式。",
+    "TRAINERS_SEARCH_LABEL": "游戏名称",
+    "TRAINERS_SEARCH_PLACEHOLDER": "例如：Hogwarts Legacy",
+    "TRAINERS_SEARCH_BUTTON": "搜索",
+    "TRAINERS_BACK": "返回",
+    "TRAINERS_NO_RESULTS": "未找到结果。",
+    "TRAINERS_SEARCH_ERROR": "无法连接到 FLiNG Trainer，请检查 Wi-Fi 连接后重试。",
+    "TRAINERS_SELECT_VERSION": "选择版本",
+    "TRAINERS_DOWNLOADING": "正在下载修改器...",
+    "TRAINERS_DOWNLOAD_ERROR": "下载失败。压缩包可能受密码保护，或该网站页面已更改；你仍可以手动下载并将其设置为附加程序。",
+    "TRAINERS_DOWNLOAD_SUCCESS": "修改器已下载并设置为附加程序。"
 }

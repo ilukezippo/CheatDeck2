@@ -47,5 +47,17 @@
     "CUSTOM_DELETE_TITLE": "Удалить пользовательский параметр?",
     "CUSTOM_DELETE_DESC": "Это действие нельзя отменить.",
     "CUSTOM_ADD_LABEL": "Добавить новый параметр",
-    "CUSTOM_ADD_DESC": "Добавить пользовательский параметр запуска"
+    "CUSTOM_ADD_DESC": "Добавить пользовательский параметр запуска",
+    "TRAINERS_TITLE": "Трейнеры",
+    "TRAINERS_SOURCE_DESC": "Поиск на FLiNG Trainer (flingtrainer.com) и подключение трейнера без выхода из игрового режима.",
+    "TRAINERS_SEARCH_LABEL": "Название игры",
+    "TRAINERS_SEARCH_PLACEHOLDER": "например, Hogwarts Legacy",
+    "TRAINERS_SEARCH_BUTTON": "Поиск",
+    "TRAINERS_BACK": "Назад",
+    "TRAINERS_NO_RESULTS": "Результаты не найдены.",
+    "TRAINERS_SEARCH_ERROR": "Не удалось подключиться к FLiNG Trainer. Проверьте Wi-Fi соединение и попробуйте снова.",
+    "TRAINERS_SELECT_VERSION": "Выберите версию",
+    "TRAINERS_DOWNLOADING": "Загрузка трейнера...",
+    "TRAINERS_DOWNLOAD_ERROR": "Не удалось загрузить. Архив может быть защищён паролем, либо страница сайта изменилась; вы можете скачать его вручную и указать как дополнительную программу (Sidecar).",
+    "TRAINERS_DOWNLOAD_SUCCESS": "Трейнер загружен и назначен дополнительной программой (Sidecar)."
 }

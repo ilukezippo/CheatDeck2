@@ -10,6 +10,7 @@ import { useSettings } from "./useSettings";
 interface OptionsContextProps {
   appid: number;
   command: string;
+  gameName: string;
   options: LaunchOptions;
   editable: boolean;
   diagnostics: LaunchOptions["diagnostics"];
@@ -19,6 +20,7 @@ interface OptionsContextProps {
 interface LoadedOptions {
   appid: number;
   command: string;
+  gameName: string;
   options: LaunchOptions;
 }
 
@@ -64,6 +66,7 @@ export const OptionsProvider: FC<{
       const nextLoaded = {
         appid,
         command: detail.strShortcutExe ?? "",
+        gameName: detail.strDisplayName ?? "",
         options: LaunchOptions.parse(detail.strLaunchOptions),
       };
       loadedRef.current = nextLoaded;

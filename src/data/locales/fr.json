@@ -47,5 +47,17 @@
     "CUSTOM_DELETE_TITLE": "Supprimer l'option personnalisée ?",
     "CUSTOM_DELETE_DESC": "Cette action est irréversible.",
     "CUSTOM_ADD_LABEL": "Ajouter une nouvelle option",
-    "CUSTOM_ADD_DESC": "Ajouter une option de lancement personnalisée"
+    "CUSTOM_ADD_DESC": "Ajouter une option de lancement personnalisée",
+    "TRAINERS_TITLE": "Trainers",
+    "TRAINERS_SOURCE_DESC": "Recherchez sur FLiNG Trainer (flingtrainer.com) et attachez un trainer sans quitter le mode Jeu.",
+    "TRAINERS_SEARCH_LABEL": "Nom du jeu",
+    "TRAINERS_SEARCH_PLACEHOLDER": "ex. Hogwarts Legacy",
+    "TRAINERS_SEARCH_BUTTON": "Rechercher",
+    "TRAINERS_BACK": "Retour",
+    "TRAINERS_NO_RESULTS": "Aucun résultat trouvé.",
+    "TRAINERS_SEARCH_ERROR": "Impossible de contacter FLiNG Trainer. Vérifiez votre connexion Wi-Fi et réessayez.",
+    "TRAINERS_SELECT_VERSION": "Choisir une version",
+    "TRAINERS_DOWNLOADING": "Téléchargement du trainer...",
+    "TRAINERS_DOWNLOAD_ERROR": "Échec du téléchargement. L'archive est peut-être protégée par mot de passe ou la page du site a changé ; vous pouvez toujours la télécharger manuellement et la définir comme programme secondaire.",
+    "TRAINERS_DOWNLOAD_SUCCESS": "Trainer téléchargé et défini comme programme secondaire."
 }

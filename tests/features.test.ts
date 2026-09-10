@@ -29,6 +29,37 @@ describe("features", () => {
     expect(success(sidecarProgram.disable(enabled)).toString()).toBe("");
   });
 
+  it("also enables the Wine-fallback wrapper prefix when a wrapper path is given", () => {
+    const path = "/home/deck/Games/MySidecar.exe";
+    const wrapperPath = "/home/deck/homebrew/data/CheatDeck/sidecar-launch.sh";
+    const enabled = success(sidecarProgram.set(LaunchOptions.parse(""), path, wrapperPath));
+
+    expect(enabled.getEnvironment("CHEATDECK_SIDECAR")).toBe(path);
+    expect(enabled.toString()).toContain(`bash ${wrapperPath} %command%`);
+    expect(sidecarProgram.isEnabled(enabled)).toBe(true);
+
+    const disabled = success(sidecarProgram.disable(enabled, wrapperPath));
+    expect(disabled.toString()).toBe("");
+    expect(disabled.hasEnvironment("CHEATDECK_SIDECAR")).toBe(false);
+  });
+
+  it("chains the wrapper ahead of an existing prefix command with the standard -- separator", () => {
+    const wrapperPath = "/home/deck/homebrew/data/CheatDeck/sidecar-launch.sh";
+    const withGamemode = LaunchOptions.parse("gamemoderun %command%");
+    const enabled = success(sidecarProgram.set(withGamemode, "/home/deck/Games/MySidecar.exe", wrapperPath));
+
+    expect(enabled.toString()).toContain(`bash ${wrapperPath} -- gamemoderun %command%`);
+    expect(sidecarProgram.path(enabled)).toBe("/home/deck/Games/MySidecar.exe");
+  });
+
+  it("omits the wrapper prefix when no wrapper path is available, preserving prior behavior", () => {
+    const path = "/home/deck/Games/MySidecar.exe";
+    const enabled = success(sidecarProgram.set(LaunchOptions.parse(""), path));
+
+    expect(enabled.hasEnvironment("CHEATDECK_SIDECAR")).toBe(false);
+    expect(enabled.toString()).not.toContain("bash");
+  });
+
   it.each([
     [`PROTON_REMOTE_DEBUG_CMD="'/home/deck/My Sidecar.exe'" %command%`, "/home/deck/My Sidecar.exe"],
     [`PROTON_REMOTE_DEBUG_CMD='"/home/deck/My Sidecar.exe"' %command%`, "/home/deck/My Sidecar.exe"],

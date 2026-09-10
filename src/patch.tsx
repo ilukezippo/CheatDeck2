@@ -31,7 +31,7 @@ const spliceArtworkItem = (children: any[], appid: number) => {
         Navigation.Navigate(`/cheatdeck/${appid}`);
       }}
     >
-      CheatDeck
+      CheatDeck 2
     </MenuItem>,
   );
 };

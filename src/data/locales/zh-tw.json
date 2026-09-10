@@ -47,5 +47,17 @@
     "CUSTOM_DELETE_TITLE": "刪除自訂啟動項？",
     "CUSTOM_DELETE_DESC": "此操作無法復原。",
     "CUSTOM_ADD_LABEL": "新增選項",
-    "CUSTOM_ADD_DESC": "新增自訂啟動選項"
+    "CUSTOM_ADD_DESC": "新增自訂啟動選項",
+    "TRAINERS_TITLE": "修改器",
+    "TRAINERS_SOURCE_DESC": "搜尋 FLiNG Trainer (flingtrainer.com) 並附加修改器，無需離開遊戲模式。",
+    "TRAINERS_SEARCH_LABEL": "遊戲名稱",
+    "TRAINERS_SEARCH_PLACEHOLDER": "例如：Hogwarts Legacy",
+    "TRAINERS_SEARCH_BUTTON": "搜尋",
+    "TRAINERS_BACK": "返回",
+    "TRAINERS_NO_RESULTS": "找不到結果。",
+    "TRAINERS_SEARCH_ERROR": "無法連線至 FLiNG Trainer，請檢查 Wi-Fi 連線後再試一次。",
+    "TRAINERS_SELECT_VERSION": "選擇版本",
+    "TRAINERS_DOWNLOADING": "正在下載修改器...",
+    "TRAINERS_DOWNLOAD_ERROR": "下載失敗。壓縮檔可能受密碼保護，或該網站頁面已變更；你仍可手動下載並設為附加程式。",
+    "TRAINERS_DOWNLOAD_SUCCESS": "修改器已下載並設為附加程式。"
 }

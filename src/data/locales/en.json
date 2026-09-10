@@ -47,5 +47,17 @@
     "CUSTOM_DELETE_TITLE": "Delete custom option?",
     "CUSTOM_DELETE_DESC": "This action cannot be undone.",
     "CUSTOM_ADD_LABEL": "Add a New Option",
-    "CUSTOM_ADD_DESC": "Add a custom launch option"
+    "CUSTOM_ADD_DESC": "Add a custom launch option",
+    "TRAINERS_TITLE": "Trainers",
+    "TRAINERS_SOURCE_DESC": "Search FLiNG Trainer (flingtrainer.com) and attach a trainer without leaving Gaming Mode.",
+    "TRAINERS_SEARCH_LABEL": "Game Name",
+    "TRAINERS_SEARCH_PLACEHOLDER": "e.g. Hogwarts Legacy",
+    "TRAINERS_SEARCH_BUTTON": "Search",
+    "TRAINERS_BACK": "Back",
+    "TRAINERS_NO_RESULTS": "No results found.",
+    "TRAINERS_SEARCH_ERROR": "Could not reach FLiNG Trainer. Check your Wi-Fi connection and try again.",
+    "TRAINERS_SELECT_VERSION": "Select a Version",
+    "TRAINERS_DOWNLOADING": "Downloading trainer...",
+    "TRAINERS_DOWNLOAD_ERROR": "Download failed. The archive may be password-protected or the site's page changed; you can still download it manually and set it as the Sidecar Program.",
+    "TRAINERS_DOWNLOAD_SUCCESS": "Trainer downloaded and attached as the Sidecar Program."
 }
